@@ -18,6 +18,13 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const app = express();
 
 /* ---------------------------------------------------
+   HEALTH CHECK — before CORS/auth, for UptimeRobot
+--------------------------------------------------- */
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'KAVACH API', timestamp: new Date().toISOString() });
+});
+
+/* ---------------------------------------------------
    SECURITY HEADERS & FINGERPRINT
 --------------------------------------------------- */
 app.disable('x-powered-by');
@@ -40,10 +47,8 @@ const allowedOrigins = process.env.FRONTEND_URL
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) {
-        if (allowedOrigins.length === 0) return callback(null, true); // dev fallback
-        return callback(new Error('Not allowed by CORS'));
-      }
+      // No Origin header = server-to-server (UptimeRobot, mobile apps, curl) — always allow
+      if (!origin) return callback(null, true);
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
@@ -86,10 +91,6 @@ app.use('/api/logs', logRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/echallan', echallanRoutes);
 app.use('/api/tickets', ticketRoutes);
-
-app.get('/', (req, res) => {
-  res.send('KAVACH V1 API RUNNING');
-});
 
 /* ---------------------------------------------------
    404 HANDLER
