@@ -1,0 +1,7 @@
+Perfect! Your backend is live and connected to the database. That ✅ MongoDB Connected is exactly what we wanted to see.
+
+Critical Reminder before we start the Frontend: The scraper.js file still has placeholder selectors (like #vehicle_input_id and #captcha_image_id).
+
+Action: You need to go to the real TS eChallan website, inspect the elements, and paste the real IDs into services/scraper.js later. If you don't do this, the "Robot" will crash.
+
+We can do this later, but don't forget it.
