@@ -14,6 +14,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const echallanRoutes = require('./routes/echallanRoutes');
 const logChallansRoutes = require('./routes/logChallans');
 const ticketRoutes = require('./routes/ticketRoutes');
+const manageRoutes = require('./routes/manageRoutes');
 
 const app = express();
 
@@ -91,6 +92,7 @@ app.use('/api/logs', logRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/echallan', echallanRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/manage', manageRoutes);
 
 /* ---------------------------------------------------
    404 HANDLER
