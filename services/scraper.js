@@ -13,11 +13,13 @@ async function getBrowser() {
   if (browser && browser.isConnected()) return browser;
 
   browser = await puppeteer.launch({
-    headless: "new",
+    headless: true,
+    executablePath: puppeteer.executablePath(),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
+      '--disable-gpu',
       '--window-size=1280,800'
     ]
   });
