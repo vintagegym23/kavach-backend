@@ -1,68 +1,56 @@
-require('dotenv').config();
-const { Pool } = require('pg');
-const bcrypt = require('bcryptjs');
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
-// PostgreSQL pool connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL, // or individual host/user/db settings
-});
+const { connectDB, pool } = require('../config/pgdb');
+const Admin = require('../models/Admin');
+const Checkpost = require('../models/Checkpost');
 
 const runSeed = async () => {
-  const client = await pool.connect();
   try {
-    console.log('🌱 Starting PostgreSQL seeding...');
+    await connectDB();
+    console.log('🌱 Starting database seeding...');
 
     // -----------------------------
-    // CLEAR OLD DATA AND RESET IDS
+    // CLEAR OLD DATA
     // -----------------------------
-    await client.query(`
-      TRUNCATE TABLE
-        public.admins,
-        public.checkposts
-      RESTART IDENTITY CASCADE;
-    `);
-    console.log('🗑️  Cleared old admins and checkposts');
+    await pool.query('TRUNCATE admins RESTART IDENTITY CASCADE');
+    await pool.query('TRUNCATE checkposts RESTART IDENTITY CASCADE');
+    console.log('🗑️  Cleared existing admins and checkposts');
 
     // -----------------------------
-    // CREATE ADMIN
+    // CREATE ADMIN (SP)
     // -----------------------------
-    const adminPassword = 'SP@12345';
-    const adminHash = await bcrypt.hash(adminPassword, 10);
+    const admin = await Admin.create({
+      username: 'SP_KAMAREDDY',
+      password: 'SP@12345',
+      role: 'SP'
+    });
 
-    await client.query(
-      `INSERT INTO public.admins
-        (username, password_hash, role, active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-      ['SP_KAMAREDDY', adminHash, 'SP', true]
-    );
     console.log('✅ Admin created');
-    console.log('   Username: SP_KAMAREDDY');
-    console.log('   Password:', adminPassword);
+    console.log('   Username:', admin.username);
+    console.log('   Password: SP@12345');
+    console.log('   Role    :', admin.role);
 
     // -----------------------------
     // CREATE CHECKPOST
     // -----------------------------
-    const checkpostPassword = 'CP01@123';
-    const checkpostHash = await bcrypt.hash(checkpostPassword, 10);
-
-    await client.query(
-      `INSERT INTO public.checkposts
-        (checkpost_id, name, location, password_hash, active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-      ['KMR_CP_01', 'Kamareddy NH-44 Entry', 'NH-44 North Entry', checkpostHash, true]
-    );
+    const cp = await Checkpost.create({
+      checkpost_id: 'KMR_CP_01',
+      name: 'Kamareddy NH-44 Entry',
+      location: 'NH-44 North Entry',
+      password: 'CP01@123'
+    });
 
     console.log('✅ Checkpost created');
-    console.log('   Checkpost ID: KMR_CP_01');
-    console.log('   Password:', checkpostPassword);
+    console.log('   Checkpost ID:', cp.checkpost_id);
+    console.log('   Name        :', cp.name);
+    console.log('   Location    :', cp.location);
+    console.log('   Password    : CP01@123');
 
-    console.log('🎉 PostgreSQL seeding completed successfully');
+    console.log('\n🎉 Seeding completed successfully');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Seeding failed:', err);
+    console.error('❌ Seeding failed:', err.message);
     process.exit(1);
-  } finally {
-    client.release();
   }
 };
 
