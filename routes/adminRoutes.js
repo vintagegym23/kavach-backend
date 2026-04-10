@@ -626,9 +626,8 @@ router.get(
       let { date } = req.query;
 
       if (!date) {
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() - 1);
-        date = d.toISOString().split('T')[0];
+        // Default to today in IST
+        date = new Date().toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0].trim();
       }
 
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
