@@ -54,6 +54,7 @@ class Log {
         afis_suspect,
         challan_count,
         total_pending_amount,
+        collected_fine_amount,
         status,
         remarks,
         photo_url,
@@ -61,7 +62,7 @@ class Log {
         detained,
         property_seized
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING id
       `,
       [
@@ -77,6 +78,7 @@ class Log {
         afisSuspectBool,
         echallan_summary.challan_count || 0,
         echallan_summary.total_pending_amount || 0,
+        0, // collected_fine_amount set at close time
         finalStatus,
         remarks || null,
         photo_url || null,
@@ -160,8 +162,9 @@ class Log {
               remarks = $10,
               photo_url = COALESCE($11, photo_url),
               status = $12,
+              collected_fine_amount = $13,
               updated_at = NOW()
-          WHERE id = $13`,
+          WHERE id = $14`,
         [
           data.driver_name_enc || null,
           data.driver_phone_enc || null,
@@ -175,6 +178,7 @@ class Log {
           data.remarks || null,
           data.photo_url || null,
           status,
+          data.collected_fine_amount ?? 0,
           logId
         ]
       );
@@ -194,7 +198,7 @@ class Log {
     const offset = (page - 1) * limit;
     const dataQuery = `
       SELECT id, vehicle_no, owner_name, driver_name_enc, driver_phone_enc, documents_checked, drunk_and_drive,
-             driver_drunk, suspicious_items, afis_suspect, challan_count, total_pending_amount,
+             driver_drunk, suspicious_items, afis_suspect, challan_count, total_pending_amount, collected_fine_amount,
              without_number_plate, detained, property_seized, remarks, photo_url, status, created_at
       FROM logs WHERE checkpost_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`;
 

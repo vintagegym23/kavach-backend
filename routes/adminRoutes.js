@@ -300,7 +300,7 @@ router.get(
           checkpost_id,
           COUNT(*) AS total_vehicles,
           SUM(CASE WHEN status = 'flagged' THEN 1 ELSE 0 END) AS flagged,
-          SUM(total_pending_amount) AS total_fines
+          SUM(collected_fine_amount) AS total_fines
         FROM logs
         WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
         GROUP BY checkpost_id
@@ -334,7 +334,7 @@ router.get(
           COUNT(*) AS total_vehicles,
           SUM(CASE WHEN status = 'flagged' THEN 1 ELSE 0 END) AS flagged,
           SUM(CASE WHEN status = 'cleared' THEN 1 ELSE 0 END) AS cleared,
-          SUM(total_pending_amount) AS total_fines
+          SUM(collected_fine_amount) AS total_fines
         FROM logs
         WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
       `);
@@ -386,7 +386,7 @@ router.get(
           COUNT(*) AS total_vehicles,
           SUM(CASE WHEN status = 'flagged' THEN 1 ELSE 0 END) AS flagged,
           SUM(CASE WHEN status = 'cleared' THEN 1 ELSE 0 END) AS cleared,
-          SUM(total_pending_amount) AS total_fines
+          SUM(collected_fine_amount) AS total_fines
         FROM logs
         ${where}
         GROUP BY checkpost_id
@@ -520,7 +520,7 @@ router.get(
       const result = await pool.query(
         `SELECT
           TO_CHAR(date_trunc('day', created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD') AS date,
-          SUM(total_pending_amount) AS amount
+          SUM(collected_fine_amount) AS amount
         FROM logs
         WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date
               >= (NOW() AT TIME ZONE 'Asia/Kolkata')::date - ($1 || ' days')::INTERVAL
@@ -638,8 +638,8 @@ router.get(
         `SELECT
            l.checkpost_id,
            COALESCE(c.name, l.checkpost_id) AS name,
-           SUM(l.challan_count)::int           AS challan_count,
-           SUM(l.total_pending_amount)::float  AS total_amount
+           SUM(l.challan_count)::int            AS challan_count,
+           SUM(l.collected_fine_amount)::float AS total_amount
          FROM logs l
          LEFT JOIN checkposts c ON c.checkpost_id = l.checkpost_id
          WHERE (l.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = $1
@@ -689,7 +689,7 @@ router.get(
             SUM(CASE WHEN drunk_and_drive THEN 1 ELSE 0 END) AS dd_checked,
             SUM(CASE WHEN driver_drunk THEN 1 ELSE 0 END) AS dd_cases,
             SUM(CASE WHEN without_number_plate THEN 1 ELSE 0 END) AS wrong_plate,
-            SUM(challan_count) AS challans_paid,
+            SUM(collected_fine_amount) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
           FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2
@@ -702,7 +702,7 @@ router.get(
             SUM(CASE WHEN afis_suspect THEN 1 ELSE 0 END) AS suspects_traced,
             SUM(CASE WHEN driver_drunk THEN 1 ELSE 0 END) AS dd_cases,
             SUM(CASE WHEN without_number_plate THEN 1 ELSE 0 END) AS wrong_plate,
-            SUM(challan_count) AS challans_paid,
+            SUM(collected_fine_amount) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
           FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date <= $2
@@ -715,7 +715,7 @@ router.get(
             SUM(CASE WHEN afis_suspect THEN 1 ELSE 0 END) AS suspects_traced,
             SUM(CASE WHEN driver_drunk THEN 1 ELSE 0 END) AS dd_cases,
             SUM(CASE WHEN without_number_plate THEN 1 ELSE 0 END) AS wrong_plate,
-            SUM(challan_count) AS challans_paid,
+            SUM(collected_fine_amount) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
           FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date < $1

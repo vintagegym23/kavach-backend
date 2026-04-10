@@ -204,7 +204,8 @@ router.put('/close/:logId', uploadLimiter, auth, roleCheck(['CHECKPOST']), uploa
       remarks = null,
       without_number_plate = false,
       detained = false,
-      property_seized = null
+      property_seized = null,
+      collected_fine_amount = 0
     } = req.body;
 
     const cleanDriverName = sanitizeText(driver_name, 100);
@@ -233,6 +234,8 @@ router.put('/close/:logId', uploadLimiter, auth, roleCheck(['CHECKPOST']), uploa
       }
     }
 
+    const collectedAmount = Math.max(0, parseFloat(collected_fine_amount) || 0);
+
     await Log.updateDriverAndCloseAdvanced(parseInt(logId, 10), {
       driver_name_enc: encrypt(cleanDriverName),
       driver_phone_enc: encrypt(driver_phone),
@@ -245,7 +248,8 @@ router.put('/close/:logId', uploadLimiter, auth, roleCheck(['CHECKPOST']), uploa
       photo_url: photoUrl,
       without_number_plate: forceBoolean(without_number_plate),
       detained: forceBoolean(detained),
-      property_seized: cleanProperty
+      property_seized: cleanProperty,
+      collected_fine_amount: collectedAmount
     });
 
     res.json({ success: true, message: 'Log closed successfully' });
