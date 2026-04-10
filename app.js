@@ -29,7 +29,8 @@ app.get('/', (req, res) => {
    SECURITY HEADERS & FINGERPRINT
 --------------------------------------------------- */
 app.disable('x-powered-by');
-app.set('etag', false); // Prevent 304 stale cache on API responses
+app.set('etag', false);      // Prevent 304 stale cache on API responses
+app.set('trust proxy', 1);   // Render sits behind a proxy — needed for rate-limit IP detection
 
 app.use(
   helmet({
