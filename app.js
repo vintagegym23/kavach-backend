@@ -29,6 +29,7 @@ app.get('/', (req, res) => {
    SECURITY HEADERS & FINGERPRINT
 --------------------------------------------------- */
 app.disable('x-powered-by');
+app.set('etag', false); // Prevent 304 stale cache on API responses
 
 app.use(
   helmet({
