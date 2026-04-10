@@ -302,7 +302,7 @@ router.get(
           SUM(CASE WHEN status = 'flagged' THEN 1 ELSE 0 END) AS flagged,
           SUM(total_pending_amount) AS total_fines
         FROM logs
-        WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
+        WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
         GROUP BY checkpost_id
         ORDER BY total_vehicles DESC
       `);
@@ -336,7 +336,7 @@ router.get(
           SUM(CASE WHEN status = 'cleared' THEN 1 ELSE 0 END) AS cleared,
           SUM(total_pending_amount) AS total_fines
         FROM logs
-        WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
+        WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date
       `);
 
       res.json({
@@ -375,7 +375,7 @@ router.get(
       const values = [];
 
       if (startDate && endDate) {
-        where = `WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2`;
+        where = `WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2`;
         values.push(startDate, endDate);
       }
 
@@ -438,15 +438,15 @@ router.get(
 
       // today=true → current date only (used by Dashboard) — IST-aware
       if (today === 'true') {
-        conditions.push(`(created_at AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date`);
+        conditions.push(`(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = (NOW() AT TIME ZONE 'Asia/Kolkata')::date`);
       } else if (startDate && endDate) {
-        conditions.push(`(created_at AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $${i++} AND $${i++}`);
+        conditions.push(`(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $${i++} AND $${i++}`);
         values.push(startDate, endDate);
       } else if (startDate) {
-        conditions.push(`(created_at AT TIME ZONE 'Asia/Kolkata')::date >= $${i++}`);
+        conditions.push(`(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date >= $${i++}`);
         values.push(startDate);
       } else if (date) {
-        conditions.push(`(created_at AT TIME ZONE 'Asia/Kolkata')::date = $${i++}`);
+        conditions.push(`(created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = $${i++}`);
         values.push(date);
       }
 
@@ -519,10 +519,10 @@ router.get(
     try {
       const result = await pool.query(
         `SELECT
-          TO_CHAR(date_trunc('day', created_at AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD') AS date,
+          TO_CHAR(date_trunc('day', created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD') AS date,
           SUM(total_pending_amount) AS amount
         FROM logs
-        WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date
+        WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date
               >= (NOW() AT TIME ZONE 'Asia/Kolkata')::date - ($1 || ' days')::INTERVAL
         GROUP BY date
         ORDER BY date ASC`,
@@ -643,7 +643,7 @@ router.get(
            SUM(l.total_pending_amount)::float  AS total_amount
          FROM logs l
          LEFT JOIN checkposts c ON c.checkpost_id = l.checkpost_id
-         WHERE (l.created_at AT TIME ZONE 'Asia/Kolkata')::date = $1
+         WHERE (l.created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date = $1
            AND l.challan_count > 0
          GROUP BY l.checkpost_id, c.name
          ORDER BY challan_count DESC`,
@@ -693,7 +693,7 @@ router.get(
             SUM(challan_count) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
-          FROM logs WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2
+          FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2
           GROUP BY checkpost_id
         ),
         cumul_stats AS (
@@ -706,7 +706,7 @@ router.get(
             SUM(challan_count) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
-          FROM logs WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date <= $2
+          FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date <= $2
           GROUP BY checkpost_id
         ),
         prev_stats AS (
@@ -719,7 +719,7 @@ router.get(
             SUM(challan_count) AS challans_paid,
             SUM(CASE WHEN detained THEN 1 ELSE 0 END) AS detained,
             SUM(CASE WHEN property_seized IS NOT NULL AND property_seized <> '' THEN 1 ELSE 0 END) AS property_seized
-          FROM logs WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date < $1
+          FROM logs WHERE (created_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')::date < $1
           GROUP BY checkpost_id
         )
         SELECT
