@@ -375,7 +375,7 @@ router.get(
       const values = [];
 
       if (startDate && endDate) {
-        where = `WHERE created_at BETWEEN $1 AND $2`;
+        where = `WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date BETWEEN $1 AND $2`;
         values.push(startDate, endDate);
       }
 
@@ -519,10 +519,11 @@ router.get(
     try {
       const result = await pool.query(
         `SELECT
-          TO_CHAR(date_trunc('day', created_at), 'YYYY-MM-DD') AS date,
+          TO_CHAR(date_trunc('day', created_at AT TIME ZONE 'Asia/Kolkata'), 'YYYY-MM-DD') AS date,
           SUM(total_pending_amount) AS amount
         FROM logs
-        WHERE created_at >= NOW() - ($1 || ' days')::INTERVAL
+        WHERE (created_at AT TIME ZONE 'Asia/Kolkata')::date
+              >= (NOW() AT TIME ZONE 'Asia/Kolkata')::date - ($1 || ' days')::INTERVAL
         GROUP BY date
         ORDER BY date ASC`,
         [days]
@@ -533,11 +534,15 @@ router.get(
         amount: parseFloat(r.amount) || 0
       }));
 
+      // Generate IST dates on the server (Render runs UTC, so derive IST explicitly)
       const trend = [];
+      const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
       for (let i = days - 1; i >= 0; i--) {
-        const d = new Date();
+        const d = new Date(nowIST);
         d.setDate(d.getDate() - i);
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = d.getFullYear() + '-'
+          + String(d.getMonth() + 1).padStart(2, '0') + '-'
+          + String(d.getDate()).padStart(2, '0');
         const found = raw.find(r => r.date === dateStr);
         trend.push({
           date: dateStr,
